@@ -5,17 +5,19 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 const int WIDTH = 600;
 const int HEIGHT = 800;
 const char* title = "Phantom Engine";
 
 float vertices[] = {
-    // Position - 3         Color - 3
-     0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f, // top right
-     0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f, // bottom right
-    -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f, // bottom left
-    -0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 1.0f// top left
+    // Position - 3         Color - 3               TexCoords - 2
+     0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,       1.0f, 1.0f,   // top right
+     0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,       1.0f, 0.0f,   // bottom right
+    -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,       0.0f, 0.0f,   // bottom left
+    -0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 1.0f,       0.0f, 1.0f,   // top left
 };
 unsigned int indices[] = {  // note that we start from 0!
     0, 1, 3,  // first Triangle
@@ -44,10 +46,12 @@ int main(){
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void *)(0));
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void *)(sizeof(float) * 3));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void *)(0));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void *)(sizeof(float) * 3));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void *)(sizeof(float) * 6));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
     glBindVertexArray(0);
 
     std::string vertCode, fragCode;
@@ -70,6 +74,27 @@ int main(){
     int success;
     char infoLog[512];
     glGetShaderiv(vert, GL_COMPILE_STATUS, &success);
+
+    uint32_t texture;
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0); //Optional for single Texture
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
+    if(data){
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }else {
+        throw std::runtime_error("Failed to Load Texture");
+    }
+    stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     if (!success)
     {
@@ -109,12 +134,13 @@ int main(){
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
-        //Processing Here and Render
+        // Input Processing and Rendering Here
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.4, 0.4, 0.4, 0.4);
 
         glUseProgram(prog);
         glBindVertexArray(vao);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
