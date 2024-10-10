@@ -13,6 +13,9 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 
+#include "mouse.h"
+#include "keyboard.h"
+
 int WIDTH = 600;
 int HEIGHT = 800;
 const char* title = "Phantom Engine";
@@ -44,6 +47,9 @@ int main(){
 
     // GLFW Callbacks
     glfwSetFramebufferSizeCallback(window, resize_windowCB);
+    glfwSetCursorPosCallback(window, Mouse::mousePosCB);
+    glfwSetMouseButtonCallback(window, Mouse::mouseButtonCB);
+    glfwSetKeyCallback(window, Keyboard::keyboardCB);
 
     if(!gladLoadGL()) throw std::runtime_error("Failed to Load OpenGL Loader");
 
@@ -158,6 +164,10 @@ int main(){
         float delta = lastFrame - currentFrame;
         lastFrame = currentFrame;
 
+        if(Keyboard::isKeyPressed(GLFW_KEY_E)){
+            std::cout<<"E Key is Pressed!\n";
+        }
+
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.4, 0.4, 0.4, 0.4);
 
@@ -173,6 +183,10 @@ int main(){
         glBindTexture(GL_TEXTURE_2D, texture);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+
+        Mouse::update();
+        Keyboard::update();
+        
         glfwSwapBuffers(window);
         glfwSwapInterval(0);
     }
