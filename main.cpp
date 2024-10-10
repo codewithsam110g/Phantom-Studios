@@ -1,5 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/trigonometric.hpp>
 #include <stdexcept>
 #include <string>
 #include <fstream>
@@ -7,10 +9,16 @@
 #include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 
-const int WIDTH = 600;
-const int HEIGHT = 800;
+int WIDTH = 600;
+int HEIGHT = 800;
 const char* title = "Phantom Engine";
+
+// Frame timing
+float lastFrame = 0, currentFrame = 0;
 
 float vertices[] = {
     // Position - 3         Color - 3               TexCoords - 2
@@ -24,13 +32,18 @@ unsigned int indices[] = {  // note that we start from 0!
     1, 2, 3   // second Triangle
 };
 
+// Function Declarations
 std::string readFromFile(const char* path);
+void resize_windowCB(GLFWwindow* window, int width, int height);
 
 int main(){
 
     if(!glfwInit()) throw std::runtime_error("Failed to init GLFW");
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, title, nullptr, nullptr);
     glfwMakeContextCurrent(window);
+
+    // GLFW Callbacks
+    glfwSetFramebufferSizeCallback(window, resize_windowCB);
 
     if(!gladLoadGL()) throw std::runtime_error("Failed to Load OpenGL Loader");
 
@@ -131,14 +144,31 @@ int main(){
     glUseProgram(0);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); For Wireframe Rendering
+    glm::mat4 model = glm::mat4(1);
+    model = glm::rotate(model, glm::radians(-55.0f),glm::vec3(1, 0, 0));
+    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, -0.5f));
 
+    lastFrame = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
         // Input Processing and Rendering Here
+
+        currentFrame = glfwGetTime();
+        float delta = lastFrame - currentFrame;
+        lastFrame = currentFrame;
+
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.4, 0.4, 0.4, 0.4);
 
+        model = glm::rotate(model, 10 * glm::sin(glm::radians(delta)), glm::vec3(0, 0, 1));
+        glm::mat4 projection = glm::perspective(glm::radians(75.0f), (float)WIDTH / (float) HEIGHT, 0.01f, 100.0f);
+
         glUseProgram(prog);
+        // Setting Uniforms
+        glUniformMatrix4fv(glGetUniformLocation(prog, "model"), 1, GL_FALSE, &model[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(prog, "view"), 1, GL_FALSE, &view[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(prog, "projection"), 1, GL_FALSE, &projection[0][0]);
         glBindVertexArray(vao);
         glBindTexture(GL_TEXTURE_2D, texture);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -163,4 +193,10 @@ std::string readFromFile(const char* path){
         std::cout<<"Error: Shader File Not Read Successfully!"<<std::endl;
     }
     return code;
+}
+
+void resize_windowCB(GLFWwindow* window, int width, int height){
+    WIDTH = width;
+    HEIGHT= height;
+    glViewport(0, 0, WIDTH, HEIGHT);
 }
