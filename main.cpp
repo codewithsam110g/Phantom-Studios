@@ -13,6 +13,10 @@
 // Frame timing
 float lastFrame = 0, currentFrame = 0;
 
+bool firstMouse = true;
+float lastX = 400;
+float lastY = 300;
+
 float vertices[] = {
     // Position - 3         Color - 3               TexCoords - 2
      0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,       1.0f, 1.0f,   // top right
@@ -74,6 +78,11 @@ int main(){
 
         ProcessInput(delta);
 
+        int focused = glfwGetWindowAttrib(window.getWindow(), GLFW_FOCUSED);
+        if(!focused){
+            firstMouse = true;
+        }
+
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.4, 0.4, 0.4, 0.4);
 
@@ -125,10 +134,22 @@ void ProcessInput(float dt){
     if (Keyboard::isKeyDown(GLFW_KEY_LEFT_CONTROL))
         camera.ProcessKeyboard(DOWN, dt);
 
-
-    // Mouse Movement
-    float delX, delY;
-    Mouse::getCursorDelta(&delX, &delY);
-    camera.ProcessMouseMovement(delX, -delY);
+    if(firstMouse){
+        float x, y;
+        Mouse::getCursorPosition(&x, &y);
+        lastX = x;
+        lastY = y;
+        firstMouse = false;
+    }else{
+        // Mouse Movement
+        float x, y;
+        Mouse::getCursorPosition(&x, &y);
+        float delX, delY;
+        delX = x - lastX;
+        delY = lastY - y;
+        lastX = x;
+        lastY = y;
+        camera.ProcessMouseMovement(delX, delY);
+    }
 
 }

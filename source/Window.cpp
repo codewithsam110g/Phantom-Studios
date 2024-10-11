@@ -3,6 +3,7 @@
 
 Window::Window(WindowProps wp){
     windowProps = wp;
+    glfwWindowHint(GLFW_FOCUSED, GLFW_FALSE);
     window = glfwCreateWindow(windowProps.width, windowProps.height,
         windowProps.title.c_str(), nullptr, nullptr);
     glfwMakeContextCurrent(window);
