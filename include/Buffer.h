@@ -7,7 +7,7 @@ private:
     uint32_t type;
     Buffer(){};
 public:
-    Buffer(uint32_t type, int size, void * data, uint32_t usage);
+    Buffer(uint32_t type, int size, void * data, uint32_t usage = GL_STATIC_DRAW);
 
     void bind();
     void unbind();

@@ -47,6 +47,10 @@ void Mouse::update(){
     for (int i = 0; i <= 2; i++) {
         prevKeyMap[i] = keyMap[i];
     }
+    LastX = X;
+    LastY = Y;
+    delX = X - LastX;
+    delY = Y - LastY;
 }
 
 float Mouse::X = 0.0f;
