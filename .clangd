@@ -1,3 +1,4 @@
 CompileFlags:
     Add:
         - "--include-directory=./include"
+        - "--include-directory=./include/imgui"

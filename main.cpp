@@ -1,4 +1,3 @@
-#include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include <glad/glad.h>
 
@@ -10,6 +9,10 @@
 #include "VertexArray.h"
 #include "Texture.h"
 #include "Camera.h"
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 // Frame timing
 float lastFrame = 0, currentFrame = 0;
@@ -37,7 +40,8 @@ unsigned int indices[] = {  // note that we start from 0!
 Camera camera(glm::vec3(0, 0, 3));
 
 // Function Declarations
-void ProcessInput(float delta);
+void ProcessKeyboardInput(float delta);
+void ProcessMouseInput();
 
 int main(){
 
@@ -51,6 +55,15 @@ int main(){
     glfwSetKeyCallback(window.getWindow(), Keyboard::keyboardButtonCB);
 
     if(!gladLoadGL()) throw std::runtime_error("Failed to Load OpenGL Loader");
+
+    // ImGui Setup
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    ImGui_ImplGlfw_InitForOpenGL(window.getWindow(), true);
+    ImGui_ImplOpenGL3_Init("#version 330"); // GLSL version
 
     VertexArray vao;
 
@@ -82,7 +95,13 @@ int main(){
         float delta = lastFrame - currentFrame;
         lastFrame = currentFrame;
 
-        ProcessInput(delta);
+        if(!io.WantCaptureKeyboard){
+            ProcessKeyboardInput(delta);
+        }
+        if(!io.WantCaptureMouse){
+            firstMouse = false;
+            ProcessMouseInput();
+        }
 
         int focused = glfwGetWindowAttrib(window.getWindow(), GLFW_FOCUSED);
         if(!focused){
@@ -110,6 +129,23 @@ int main(){
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+        // ImGui Frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // Example UI code
+        ImGui::Begin("Hello, ImGui!");
+        ImGui::Text("This is a simple ImGui window.");
+        ImGui::SliderFloat("float", &io.DeltaTime, 0.0f, 1.0f); // Example slider
+        ImGui::SliderFloat2("clear color", (float*)&io.DisplaySize, 0.0f, 3000.0f); // Example color editor
+        ImGui::End();
+
+        // Render ImGui
+        ImGui::Render();
+
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         Mouse::update();
         Keyboard::update();
 
@@ -119,13 +155,15 @@ int main(){
         if(closeWindow)
             window.setWindowClose(true);
     }
-
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     glfwDestroyWindow(window.getWindow());
     glfwTerminate();
     return 0;
 }
 
-void ProcessInput(float dt){
+void ProcessKeyboardInput(float dt){
 
     // Keyboard Movement
     if (Keyboard::isMultiComboPressed({GLFW_KEY_LEFT_CONTROL,GLFW_KEY_Q}))
@@ -144,7 +182,9 @@ void ProcessInput(float dt){
         camera.ProcessKeyboard(DOWN, dt);
     if(Keyboard::isMultiComboPressed({GLFW_KEY_LEFT_CONTROL, GLFW_KEY_LEFT_SHIFT, GLFW_KEY_M}))
         captureMouse = !captureMouse;
+}
 
+void ProcessMouseInput(){
     float x, y;
     Mouse::getCursorPosition(&x, &y);
     if(captureMouse){
@@ -168,5 +208,4 @@ void ProcessInput(float dt){
 
     float scrollY = Mouse::getScrollDelta();
     camera.ProcessMouseScroll(scrollY);
-
 }
