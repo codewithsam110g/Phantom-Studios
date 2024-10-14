@@ -1,3 +1,4 @@
+#include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include <glad/glad.h>
 
@@ -13,6 +14,7 @@
 // Frame timing
 float lastFrame = 0, currentFrame = 0;
 
+bool captureMouse = false;
 bool firstMouse = true;
 float lastX = 400;
 float lastY = 300;
@@ -42,6 +44,7 @@ int main(){
     // GLFW Callbacks
     glfwSetCursorPosCallback(window.getWindow(), Mouse::mousePositionCB);
     glfwSetMouseButtonCallback(window.getWindow(), Mouse::mouseButtonCB);
+    glfwSetScrollCallback(window.getWindow(), Mouse::mouseScrollCB);
     glfwSetKeyCallback(window.getWindow(), Keyboard::keyboardButtonCB);
 
     if(!gladLoadGL()) throw std::runtime_error("Failed to Load OpenGL Loader");
@@ -89,7 +92,7 @@ int main(){
         glViewport(0, 0, window.getWidth(), window.getHeight());
 
         model = glm::rotate(model, 10 * glm::sin(glm::radians(delta)), glm::vec3(0, 0, 1));
-        glm::mat4 projection = glm::perspective(glm::radians(75.0f), window.getAspectRatio(), 0.01f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), window.getAspectRatio(), 0.01f, 100.0f);
 
         shader.bind();
 
@@ -133,23 +136,31 @@ void ProcessInput(float dt){
         camera.ProcessKeyboard(UP, dt);
     if (Keyboard::isKeyDown(GLFW_KEY_LEFT_CONTROL))
         camera.ProcessKeyboard(DOWN, dt);
+    if(Keyboard::isMultiComboPressed({GLFW_KEY_LEFT_CONTROL, GLFW_KEY_LEFT_SHIFT, GLFW_KEY_M}))
+        captureMouse = !captureMouse;
 
-    if(firstMouse){
-        float x, y;
-        Mouse::getCursorPosition(&x, &y);
-        lastX = x;
-        lastY = y;
-        firstMouse = false;
+    float x, y;
+    Mouse::getCursorPosition(&x, &y);
+    if(captureMouse){
+        if(firstMouse){
+            lastX = x;
+            lastY = y;
+            firstMouse = false;
+        }else{
+            float delX, delY;
+            delX = x - lastX;
+            delY = lastY - y;
+            lastX = x;
+            lastY = y;
+            camera.ProcessMouseMovement(delX, delY);
+        }
     }else{
-        // Mouse Movement
-        float x, y;
-        Mouse::getCursorPosition(&x, &y);
-        float delX, delY;
-        delX = x - lastX;
-        delY = lastY - y;
+        firstMouse = true;
         lastX = x;
         lastY = y;
-        camera.ProcessMouseMovement(delX, delY);
     }
+
+    float scrollY = Mouse::getScrollDelta();
+    camera.ProcessMouseScroll(scrollY);
 
 }
