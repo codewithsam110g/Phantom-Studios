@@ -19,6 +19,9 @@ bool firstMouse = true;
 float lastX = 400;
 float lastY = 300;
 
+// Flags
+bool closeWindow = false;
+
 float vertices[] = {
     // Position - 3         Color - 3               TexCoords - 2
      0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,       1.0f, 1.0f,   // top right
@@ -112,6 +115,9 @@ int main(){
 
         glfwSwapBuffers(window.getWindow());
         glfwSwapInterval(0);
+
+        if(closeWindow)
+            window.setWindowClose(true);
     }
 
     glfwDestroyWindow(window.getWindow());
@@ -122,8 +128,8 @@ int main(){
 void ProcessInput(float dt){
 
     // Keyboard Movement
-    if (Keyboard::isKeyDown(GLFW_KEY_Q))
-        glfwTerminate();
+    if (Keyboard::isMultiComboPressed({GLFW_KEY_LEFT_CONTROL,GLFW_KEY_Q}))
+        closeWindow = true;
     if (Keyboard::isKeyDown(GLFW_KEY_W))
         camera.ProcessKeyboard(FORWARD, dt);
     if (Keyboard::isKeyDown(GLFW_KEY_S))

@@ -29,6 +29,10 @@ bool Window::shouldWindowClose(){
     return glfwWindowShouldClose(window);
 }
 
+void Window::setWindowClose(bool value){
+    glfwSetWindowShouldClose(window, value);
+}
+
 void Window::resizeWindowCB(GLFWwindow* window, int width, int height){
     Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (win) {

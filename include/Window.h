@@ -27,6 +27,7 @@ public:
     int getHeight();
 
     bool shouldWindowClose();
+    void setWindowClose(bool value);
 
     static void resizeWindowCB(GLFWwindow* window, int width, int height);
 
