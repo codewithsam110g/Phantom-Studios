@@ -1,3 +1,4 @@
+#include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include <glad/glad.h>
 
@@ -9,6 +10,8 @@
 #include "VertexArray.h"
 #include "Texture.h"
 #include "Camera.h"
+#include "Framebuffer.h"
+
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -18,6 +21,7 @@
 float lastFrame = 0, currentFrame = 0;
 
 bool captureMouse = false;
+bool isViewportHovered = false;
 bool firstMouse = true;
 float lastX = 400;
 float lastY = 300;
@@ -65,6 +69,9 @@ int main(){
     ImGui_ImplGlfw_InitForOpenGL(window.getWindow(), true);
     ImGui_ImplOpenGL3_Init("#version 330"); // GLSL version
 
+    Framebuffer fbo(window.getWidth(), window.getHeight());
+    fbo.unbind();
+
     VertexArray vao;
 
     Buffer vbo(GL_ARRAY_BUFFER, sizeof(vertices), vertices),
@@ -86,6 +93,7 @@ int main(){
     model = glm::rotate(model, glm::radians(-55.0f),glm::vec3(1, 0, 0));
 
     lastFrame = glfwGetTime();
+
     while (!glfwWindowShouldClose(window.getWindow())) {
         glfwPollEvents();
 
@@ -98,9 +106,11 @@ int main(){
         if(!io.WantCaptureKeyboard){
             ProcessKeyboardInput(delta);
         }
-        if(!io.WantCaptureMouse){
-            firstMouse = false;
+
+        if(isViewportHovered){
             ProcessMouseInput();
+        }else{
+            firstMouse = true;
         }
 
         int focused = glfwGetWindowAttrib(window.getWindow(), GLFW_FOCUSED);
@@ -108,7 +118,9 @@ int main(){
             firstMouse = true;
         }
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        fbo.bind();
+        glEnable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.4, 0.4, 0.4, 0.4);
 
         glViewport(0, 0, window.getWidth(), window.getHeight());
@@ -129,16 +141,75 @@ int main(){
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+        fbo.unbind();
+
         // ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Example UI code
-        ImGui::Begin("Hello, ImGui!");
-        ImGui::Text("This is a simple ImGui window.");
-        ImGui::SliderFloat("float", &io.DeltaTime, 0.0f, 1.0f); // Example slider
-        ImGui::SliderFloat2("clear color", (float*)&io.DisplaySize, 0.0f, 3000.0f); // Example color editor
+        ImGuiStyle& style = ImGui::GetStyle();
+        // style.WindowPadding = ImVec2(16.f, 16.f);    // No padding inside the window
+        // style.WindowRounding = 32.f;                 // No rounding on window corners
+        // style.FramePadding = ImVec2(16.0f, 16.0f);     // No padding around frames (optional)
+        style.WindowBorderSize = 8.f;
+
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(io.DisplaySize);                 // Make it the size of the GLFW window
+        ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID); // Tie it to the main viewport
+
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoBringToFrontOnFocus |
+            ImGuiWindowFlags_NoNavFocus |
+            ImGuiWindowFlags_NoBackground;
+
+        // Create a full-size dockspace that fills the GLFW window
+        ImGui::Begin("MainDockspace", nullptr, windowFlags);
+        ImGuiID dockspaceID = ImGui::GetID("MainDockspace");
+        ImGui::DockSpace(dockspaceID, ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
+
+        ImGui::End();
+
+        // Now define the 4 windows that can be docked manually
+
+        windowFlags = ImGuiWindowFlags_NoCollapse;
+        // Top-left window
+        ImGui::Begin("Hierarchy", nullptr, windowFlags);
+        ImGui::Text("This is window 1 (top-left).");
+        ImGui::End();
+
+        // Top-center window
+        ImGui::Begin("Viewport", nullptr);
+
+        // Check if size changed
+        ImVec2 wSize = ImGui::GetContentRegionAvail();
+        static ImVec2 prevSize = wSize;
+
+        if (wSize.x != prevSize.x || wSize.y != prevSize.y) {
+            prevSize = wSize;
+            window.setWidthandHeight(wSize.x, wSize.y); // Update GLFW window dimensions
+            fbo.resize(wSize.x, wSize.y);              // Update framebuffer size
+            glViewport(0, 0, wSize.x, wSize.y);        // Update OpenGL viewport
+        }
+
+        isViewportHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
+
+        // Render to ImGui
+        ImGui::Image((ImTextureID)fbo.getTexture(), wSize, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::End();
+
+
+        // Top-right window
+        ImGui::Begin("Inspector", nullptr, windowFlags);
+        ImGui::Text("This is window 3 (top-right).");
+        ImGui::End();
+
+        // Bottom window (spans full width)
+        ImGui::Begin("Assets", nullptr, windowFlags);
+        ImGui::Text("This is window 4 (bottom, full width).");
         ImGui::End();
 
         // Render ImGui
@@ -180,8 +251,10 @@ void ProcessKeyboardInput(float dt){
         camera.ProcessKeyboard(UP, dt);
     if (Keyboard::isKeyDown(GLFW_KEY_LEFT_CONTROL))
         camera.ProcessKeyboard(DOWN, dt);
-    if(Keyboard::isMultiComboPressed({GLFW_KEY_LEFT_CONTROL, GLFW_KEY_LEFT_SHIFT, GLFW_KEY_M}))
+    if(isViewportHovered && Keyboard::isSingleMultiComboPressed({GLFW_KEY_LEFT_CONTROL, GLFW_KEY_LEFT_SHIFT, GLFW_KEY_M})){
+        std::cout<<"Mouse Capture Selected!\n";
         captureMouse = !captureMouse;
+    }
 }
 
 void ProcessMouseInput(){

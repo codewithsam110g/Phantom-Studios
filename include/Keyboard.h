@@ -30,7 +30,9 @@ public:
     static bool isAltPressed();
 
     static bool isMultiComboPressed(std::initializer_list<int> keys);
-
+    
+    static bool isSingleMultiComboPressed(std::initializer_list<int> keys);
+    
     static void update();
 };
 

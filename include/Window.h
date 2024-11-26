@@ -25,6 +25,7 @@ public:
 
     int getWidth();
     int getHeight();
+    void setWidthandHeight(int width, int height);
 
     bool shouldWindowClose();
     void setWindowClose(bool value);

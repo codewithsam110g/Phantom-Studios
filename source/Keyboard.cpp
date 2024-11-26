@@ -52,6 +52,30 @@ bool Keyboard::isMultiComboPressed(std::initializer_list<int> keys) {
     return true;
 }
 
+bool Keyboard::isSingleMultiComboPressed(std::initializer_list<int> keys) {
+    bool nonModKeyPressed = false;
+
+    for (int key : keys) {
+        if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL) {
+            if (!ctrlPressed) return false; // Ensure Ctrl is held
+        } else if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT) {
+            if (!shiftPressed) return false; // Ensure Shift is held
+        } else if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT) {
+            if (!altPressed) return false; // Ensure Alt is held
+        } else {
+            // For non-modifier keys, ensure it is newly pressed
+            if (keyMap[key] && !prevKeyMap[key]) {
+                nonModKeyPressed = true;
+            } else {
+                return false; // Non-modifier key condition not met
+            }
+        }
+    }
+
+    return nonModKeyPressed; // Only true if at least one non-modifier key is newly pressed
+}
+
+
 // Initialize static variables
 bool Keyboard::keyMap[349] = { false };
 bool Keyboard::prevKeyMap[349] = { false };

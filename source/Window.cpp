@@ -8,7 +8,7 @@ Window::Window(WindowProps wp){
         windowProps.title.c_str(), nullptr, nullptr);
     glfwMakeContextCurrent(window);
     glfwSetWindowUserPointer(window, this);
-    glfwSetFramebufferSizeCallback(window, resizeWindowCB);
+    //glfwSetFramebufferSizeCallback(window, resizeWindowCB);
 }
 
 GLFWwindow* Window::getWindow(){
@@ -23,6 +23,11 @@ int Window::getWidth(){
 }
 int Window::getHeight(){
     return windowProps.height;
+}
+
+void Window::setWidthandHeight(int width, int height){
+    windowProps.width = width;
+    windowProps.height = height;
 }
 
 bool Window::shouldWindowClose(){
