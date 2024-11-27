@@ -1,6 +1,6 @@
 #include "../include/Keyboard.h"
 
-void Keyboard::keyboardButtonCB(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void Keyboard::keyboardKeyCB(GLFWwindow* window, int key, int scancode, int action, int mods) {
     prevKeyMap[key] = keyMap[key];
 
     if (action == GLFW_PRESS) {
@@ -43,7 +43,7 @@ bool Keyboard::isAltPressed() {
     return altPressed;
 }
 
-bool Keyboard::isMultiComboPressed(std::initializer_list<int> keys) {
+bool Keyboard::isMultiKeyDown(std::initializer_list<int> keys) {
     for (int key : keys) {
         if (!keyMap[key]) {
             return false;
@@ -52,7 +52,7 @@ bool Keyboard::isMultiComboPressed(std::initializer_list<int> keys) {
     return true;
 }
 
-bool Keyboard::isSingleMultiComboPressed(std::initializer_list<int> keys) {
+bool Keyboard::isMultiKeyPress(std::initializer_list<int> keys) {
     bool nonModKeyPressed = false;
 
     for (int key : keys) {

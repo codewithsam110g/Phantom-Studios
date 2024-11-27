@@ -36,15 +36,15 @@ void Mouse::getCursorDelta(float *x, float *y){
     *y = delY;
 }
 
-bool Mouse::isKeyDown(MouseButton btn){
+bool Mouse::isButtonDown(MouseButton btn){
     return keyMap[btn];
 }
 
-bool Mouse::isKeyPressed(MouseButton btn){
+bool Mouse::isButtonPressed(MouseButton btn){
     return keyMap[btn] && !prevKeyMap[btn];
 }
 
-bool Mouse::isKeyReleased(MouseButton btn){
+bool Mouse::isButtonReleased(MouseButton btn){
     return !keyMap[btn] && prevKeyMap[btn];
 }
 

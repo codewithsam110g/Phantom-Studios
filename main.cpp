@@ -56,7 +56,7 @@ int main(){
     glfwSetCursorPosCallback(window.getWindow(), Mouse::mousePositionCB);
     glfwSetMouseButtonCallback(window.getWindow(), Mouse::mouseButtonCB);
     glfwSetScrollCallback(window.getWindow(), Mouse::mouseScrollCB);
-    glfwSetKeyCallback(window.getWindow(), Keyboard::keyboardButtonCB);
+    glfwSetKeyCallback(window.getWindow(), Keyboard::keyboardKeyCB);
 
     if(!gladLoadGL()) throw std::runtime_error("Failed to Load OpenGL Loader");
 
@@ -237,7 +237,7 @@ int main(){
 void ProcessKeyboardInput(float dt){
 
     // Keyboard Movement
-    if (Keyboard::isMultiComboPressed({GLFW_KEY_LEFT_CONTROL,GLFW_KEY_Q}))
+    if (Keyboard::isMultiKeyPress({GLFW_KEY_LEFT_CONTROL,GLFW_KEY_Q}))
         closeWindow = true;
     if (Keyboard::isKeyDown(GLFW_KEY_W))
         camera.ProcessKeyboard(FORWARD, dt);
@@ -251,8 +251,7 @@ void ProcessKeyboardInput(float dt){
         camera.ProcessKeyboard(UP, dt);
     if (Keyboard::isKeyDown(GLFW_KEY_LEFT_CONTROL))
         camera.ProcessKeyboard(DOWN, dt);
-    if(isViewportHovered && Keyboard::isSingleMultiComboPressed({GLFW_KEY_LEFT_CONTROL, GLFW_KEY_LEFT_SHIFT, GLFW_KEY_M})){
-        std::cout<<"Mouse Capture Selected!\n";
+    if(isViewportHovered && Mouse::isButtonPressed(MOUSE_MIDDLE)){
         captureMouse = !captureMouse;
     }
 }

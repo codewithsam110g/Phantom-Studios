@@ -30,9 +30,9 @@ public:
     static void getCursorPosition(float *x, float* y);
     static void getCursorDelta(float *x, float *y);
 
-    static bool isKeyDown(MouseButton btn);
-    static bool isKeyPressed(MouseButton btn);
-    static bool isKeyReleased(MouseButton btn);
+    static bool isButtonDown(MouseButton btn);
+    static bool isButtonPressed(MouseButton btn);
+    static bool isButtonReleased(MouseButton btn);
 
     static float getScrollDelta();
 
