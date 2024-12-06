@@ -1,6 +1,7 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include "../include/Texture.h"
-
-Texture::Texture(std::string path, uint32_t texSlot){
+Texture::Texture(std::string path, uint32_t texSlot, TextureType type){
+    texType = type;
     glGenTextures(1, &tex);
     glActiveTexture(texSlot); //Optional for single Texture
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -32,6 +33,8 @@ void Texture::unbind(){
     glActiveTexture(texSlot);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
+
+uint32_t Texture::getTexSlot(){return texSlot - GL_TEXTURE0;}
 
 Texture::~Texture(){
     glDeleteTextures(1, &tex);

@@ -74,6 +74,10 @@ void Shader::setMat4(std::string varName, glm::mat4 mat){
     glUniformMatrix4fv(glGetUniformLocation(id, varName.c_str()), 1, GL_FALSE, &mat[0][0]);
 }
 
+void Shader::setInt(std::string varName, int value){
+    glUniform1i(glGetUniformLocation(id, varName.c_str()), value);
+}
+
 Shader::~Shader(){
     glDetachShader(id, vert);
     glDetachShader(id, frag);

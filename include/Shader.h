@@ -19,9 +19,11 @@ public:
     void bind();
     void unbind();
 
+    uint32_t getId(){return id;};
+
     //Uniforms
     void setMat4(std::string varName, glm::mat4 mat);
-
+    void setInt(std::string varName, int value);
     ~Shader();
 };
 

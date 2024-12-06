@@ -1,7 +1,5 @@
 #include <iostream>
-#define STB_IMAGE_IMPLEMENTATION
 #include <glad/glad.h>
-
 #include "Mouse.h"
 #include "Keyboard.h"
 #include "Window.h"
@@ -11,6 +9,7 @@
 #include "Texture.h"
 #include "Camera.h"
 #include "Framebuffer.h"
+#include "Model.h"
 
 
 #include "imgui.h"
@@ -94,6 +93,12 @@ int main(){
 
     lastFrame = glfwGetTime();
 
+    Shader modelShader("./Shaders/model_vert.glsl","./Shaders/model_frag.glsl");
+    modelShader.unbind();
+    auto tp = glfwGetTime();
+    Model m1("./backpack.obj");
+    auto tn = glfwGetTime();
+    std::cout<<tn-tp<<std::endl;
     while (!glfwWindowShouldClose(window.getWindow())) {
         glfwPollEvents();
 
@@ -120,8 +125,8 @@ int main(){
 
         fbo.bind();
         glEnable(GL_DEPTH_TEST);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.4, 0.4, 0.4, 0.4);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glViewport(0, 0, window.getWidth(), window.getHeight());
 
@@ -141,7 +146,18 @@ int main(){
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+        modelShader.bind();
+
+        modelShader.setMat4("model", model);
+        modelShader.setMat4("view", camera.GetViewMatrix());
+        modelShader.setMat4("projection", projection);
+
+        m1.Draw(modelShader);
         fbo.unbind();
+
+        glDisable(GL_DEPTH_TEST);
+        glClearColor(0.06, 0.06, 0.06, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         // ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
