@@ -8,10 +8,31 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake gcc g++ make libglfw3-dev libassimp-dev libglm-dev
+
     - name: Compile
-      run: make
+      run: |
+        num_cores=$(nproc)
+        make -j$num_cores
+
+    - name: Verify Executable
+      run: |
+        if [ ! -f ./main ]; then
+          echo "Error: The expected executable 'main' was not found!"
+          exit 1
+        fi
+
+    - name: Upload Executable
+      uses: actions/upload-artifact@v3
+      with:
+        name: main-executable
+        path: ./main
