@@ -1,7 +1,7 @@
 # Compiler and Flags
 CXX = g++
 CXXFLAGS = -g -std=c++17 -I include -I include/imgui
-LDFLAGS = -lglfw3 -lGL -lassimp
+LDFLAGS = -lglfw -lGL -lassimp
 
 # Source Directories
 SRC_DIR = source
